@@ -25,7 +25,7 @@ plot_L = 3000
 list_noiseType=[None, 'Gaussian', 'Laplacian']
 list_noiseWhen=['in', 'post']
 list_noiseAddType=['add', 'mult', 'both']   
-list_noiseLevel=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+list_noiseLevel=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
 
 for noiseType in list_noiseType:
     if noiseType==None or noiseType.lower()=='none':

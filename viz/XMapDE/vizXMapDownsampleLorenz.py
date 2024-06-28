@@ -18,7 +18,7 @@ parser = argparse.ArgumentParser('Downsample noisy Lorenz and visualize neighbor
 parser.add_argument('--downsampleType', type=str, default=None, help='downsample type, options: None, "a/av/average" (average), "d/de/decimation" (remove/discard the rest), "s/sub/subsample" (randomly sample a subset of half the interval size from each interval, then average)')
 parser.add_argument('--downsampleFactor', type=int, default=10, help='downsample interval')
 
-parser.add_argument('--noiseType', type=str, default=None, help='noise type to use, options: None, "laplacian"/"lpNoise"/"l", "gaussian"/"gNoise"/"g"')
+parser.add_argument('--noiseType', type=str, default='lpNoise', help='noise type to use, options: None, "laplacian"/"lpNoise"/"l", "gaussian"/"gNoise"/"g"')
 parser.add_argument('--noiseWhen', type=str, default='in', help='when to add noise, options: "in-generation"/"in", "post-generation"/"post", only effective when noiseType is not None')
 parser.add_argument('--noiseAddType', type=str, default='add', help='additive or multiplicative noise, options: "additive"/"add", "multiplicative"/"mult", "both", only effective when noiseType is not None')
 parser.add_argument('--noiseLevel', type=float, default=1e-2, help='noise level, only effective when noiseType is not None')
@@ -69,7 +69,7 @@ else:
     start_plot=np.random.randint(0, L-plotL) if L>plotL else 0
     centroid_idx=np.random.randint(0, plotL-1)
 
-noiseType_str=args.noiseType if args.noiseType!=None and args.noiseType.lower()!='none' else 'None'
+noiseType_str=args.noiseType if (args.noiseType!=None and args.noiseType.lower()!='none') else 'None'
 imgs_dir = os.path.join(output_dir, noiseType_str)
 if not os.path.exists(imgs_dir):
     os.makedirs(imgs_dir)
