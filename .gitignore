@@ -1,0 +1,6 @@
+0_job_scripts/
+data/
+outputs/
+
+**/*.pyc
+**/__pycache__/
