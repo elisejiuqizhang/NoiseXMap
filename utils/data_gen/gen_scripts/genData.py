@@ -13,8 +13,8 @@ from utils.data_gen.RosslerLorenz import gen_RosslerLorenz
 import argparse
 parser=argparse.ArgumentParser('viz increasing L vs. avgCorr for CCM')
 
-parser.add_argument('--dataType', type=str, default='BiVarLogistic', help='data type to use, options: "BiVarLogistic" ("BiLog"), "Lorenz" ("L"), "RosslerLorenz" ("RL")')
-parser.add_argument('--noiseType', type=str, default='lpNoise', help='noise type to use, options: None, "laplacian"/"lpNoise"/"l", "gaussian"/"gNoise"/"g"')
+parser.add_argument('--dataType', type=str, default='Lorenz', help='data type to use, options: "BiVarLogistic" ("BiLog"), "Lorenz" ("L"), "RosslerLorenz" ("RL")')
+parser.add_argument('--noiseType', type=str, default=None, help='noise type to use, options: None, "laplacian"/"lpNoise"/"l", "gaussian"/"gNoise"/"g"')
 parser.add_argument('--noiseWhen', type=str, default='in', help='when to add noise, options: "in-generation"/"in", "post-generation"/"post", only effective when noiseType is not None')
 parser.add_argument('--noiseAddType', type=str, default='add', help='additive or multiplicative noise, options: "additive"/"add", "multiplicative"/"mult", "both", only effective when noiseType is not None')
 parser.add_argument('--noiseLevel', type=float, default=5e-2, help='noise level, only effective when noiseType is not None')

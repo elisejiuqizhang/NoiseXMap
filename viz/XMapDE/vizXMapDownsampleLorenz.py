@@ -7,6 +7,7 @@ from utils.XMap.DelayEmd import *
 
 # k nearest neighbors help
 from sklearn.neighbors import NearestNeighbors
+from utils.XMap.CM_simplex import * 
 
 import numpy as np
 import random
@@ -21,11 +22,12 @@ parser.add_argument('--downsampleFactor', type=int, default=10, help='downsample
 parser.add_argument('--noiseType', type=str, default='lpNoise', help='noise type to use, options: None, "laplacian"/"lpNoise"/"l", "gaussian"/"gNoise"/"g"')
 parser.add_argument('--noiseWhen', type=str, default='in', help='when to add noise, options: "in-generation"/"in", "post-generation"/"post", only effective when noiseType is not None')
 parser.add_argument('--noiseAddType', type=str, default='add', help='additive or multiplicative noise, options: "additive"/"add", "multiplicative"/"mult", "both", only effective when noiseType is not None')
-parser.add_argument('--noiseLevel', type=float, default=1e-2, help='noise level, only effective when noiseType is not None')
+parser.add_argument('--noiseLevel', type=float, default=0.15, help='noise level, only effective when noiseType is not None')
 
 parser.add_argument('--tau', type=int, default=2, help="CCM tau-lag")
 # emd dim fixed at 3 for visualization, so no need to add as an input argument
 
+parser.add_argument('--NNType', type=str, default='probablistic', help='type of nearest neighbors to use, options: "vanilla", "probablistic"')
 parser.add_argument('--n_neigh', type=int, default=14, help='number of neighbors to consider in XMap')
 
 parser.add_argument('--L', type=int, default=10000, help='length of the time series')
@@ -43,7 +45,7 @@ random.seed(args.seed)
 np.random.seed(args.seed)
 
 # output dir
-output_dir = os.path.join(root, 'outputs', 'viz', 'XMapDE', 'Lorenz')
+output_dir = os.path.join(root, 'outputs', 'viz', 'XMapDE', 'Lorenz', args.NNType+'NN')
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 # if no downsampling, save to subfolder "noDownsample"
@@ -115,19 +117,31 @@ Y_embed=time_delay_embed(data_Y, tau, emd)
 Z_embed=time_delay_embed(data_Z, tau, emd)
 
 
-neigh = NearestNeighbors(n_neighbors=n_neigh)
-# find k nearest neighbors on the real data
-neigh.fit(data_downsampled_plot)
-_, indices = neigh.kneighbors(data_downsampled_plot[centroid_idx].reshape(1, -1))
-# find k nearest neighbors on X_embed
-neigh.fit(X_embed)
-_, indicesX = neigh.kneighbors(X_embed[centroid_idx].reshape(1, -1))
-# find k nearest neighbors on Y_embed
-neigh.fit(Y_embed)
-_, indicesY = neigh.kneighbors(Y_embed[centroid_idx].reshape(1, -1))
-# find k nearest neighbors on Z_embed
-neigh.fit(Z_embed)
-_, indicesZ = neigh.kneighbors(Z_embed[centroid_idx].reshape(1, -1))
+if args.NNType.lower()=='vanilla' or args.NNType.lower()=='v':
+    neigh = NearestNeighbors(n_neighbors=n_neigh)
+    # find k nearest neighbors on the real data
+    neigh.fit(data_downsampled_plot)
+    _, indices = neigh.kneighbors(data_downsampled_plot[centroid_idx].reshape(1, -1))
+    # find k nearest neighbors on X_embed
+    neigh.fit(X_embed)
+    _, indicesX = neigh.kneighbors(X_embed[centroid_idx].reshape(1, -1))
+    # find k nearest neighbors on Y_embed
+    neigh.fit(Y_embed)
+    _, indicesY = neigh.kneighbors(Y_embed[centroid_idx].reshape(1, -1))
+    # find k nearest neighbors on Z_embed
+    neigh.fit(Z_embed)
+    _, indicesZ = neigh.kneighbors(Z_embed[centroid_idx].reshape(1, -1))
+elif args.NNType.lower()=='probablistic' or args.NNType.lower()=='p':
+    distsReal=CM_rep_simplex.get_distance_probablistic(data_downsampled_plot, noiseType=args.noiseType, noiseLevel=args.noiseLevel)
+    distsX=CM_rep_simplex.get_distance_probablistic(X_embed, noiseType=args.noiseType, noiseLevel=args.noiseLevel)
+    distsY=CM_rep_simplex.get_distance_probablistic(Y_embed, noiseType=args.noiseType, noiseLevel=args.noiseLevel)
+    distsZ=CM_rep_simplex.get_distance_probablistic(Z_embed, noiseType=args.noiseType, noiseLevel=args.noiseLevel)
+    indices=np.argsort(distsReal)[1:n_neigh+1]
+    indicesX=np.argsort(distsX)[1:n_neigh+1]
+    indicesY=np.argsort(distsY)[1:n_neigh+1]
+    indicesZ=np.argsort(distsZ)[1:n_neigh+1]
+else:
+    raise ValueError('NNType not recognized')
 
 # 3D plot: four imgs side by side, from left to right - real data, X_embed, Y_embed, Z_embed
 # 1. using indices to plot

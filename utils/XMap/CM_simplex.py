@@ -270,7 +270,7 @@ class CM_rep_simplex:
         sc2_corr=np.nanmean(np.abs(corr(self.M_effect, M_effect_reconst)))
 
         return sc1_error, sc2_error, sc1_corr, sc2_corr
-    
+
 
     @staticmethod
     def get_nearest_distances(distM, t_tar, knn=10):
@@ -295,8 +295,6 @@ class CM_rep_simplex:
         nearest_distances=dists[nearest_time_indices]
 
         return nearest_time_indices, nearest_distances
-
-    
 
     @staticmethod
     def get_distance_vanilla(M):
@@ -329,7 +327,28 @@ class CM_rep_simplex:
 
         return dists
         
+    @staticmethod
+    def get_distance_probablistic(M, noiseType='lp', noiseLevel=0.5):
+        """ Probablistic distances between points;
+        Will be used for probabilistic kNN - first attempt: try to add noise to points on M before calculation of the distances.
+        """
+        # vary points on M with noise
+        if noiseType.lower()=='lp' or noiseType.lower()=='lpNoise' or noiseType.lower()=='laplace':
+            noise=np.random.laplace(0, noiseLevel, M.shape)
+            M_noisy=M+noise
+        elif noiseType.lower()=='g' or noiseType.lower()=='gNoise' or noiseType.lower()=='gaussian':
+            noise=np.random.normal(0, noiseLevel, M.shape)
+            M_noisy=M+noise
+        else:
+            M_noisy=M
 
+        # get the distances between each pair of points in M
+        dists=np.zeros((M.shape[0],M.shape[0]))
+        for i in range(M.shape[0]):
+            for j in range(M.shape[0]):
+                dists[i,j]=np.linalg.norm(M_noisy[i]-M_noisy[j])
+
+        return dists
 
 
 # Utility 2: PCM mapping between representations - either the delay embeddings or latent representations
