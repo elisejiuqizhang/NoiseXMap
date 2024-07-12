@@ -34,7 +34,7 @@ def load_and_process_density_files(output_dir, noiseType, noiseWhen, noiseAddTyp
     return results
 
 # Function to organize data by noise level and generate plots
-def generate_plots(results, save_dir):
+def generate_plots(results, save_dir, noiseLevels):
     # Organize data by noise level
     data_by_noise_level = {}
     for result in results:
@@ -55,10 +55,13 @@ def generate_plots(results, save_dir):
     for key, data in data_by_noise_level.items():
         df = pd.DataFrame(data)
         df = df.sort_values('noise_level')
+
         plt.figure()
         for subkey in ['GroundTruth_Density', 'X_Density', 'Y_Density', 'Z_Density']:  # Include only relevant keys
-            y_values = df['value'].apply(lambda x: x.get(subkey, np.nan)).dropna()
-            plt.plot(df['noise_level'][:len(y_values)], y_values, marker='o', label=subkey)
+            if subkey in df['value'][0].keys():
+                y_values = df['value'].apply(lambda x: x.get(subkey, np.nan))
+                plt.plot(df['noise_level'], y_values, marker='o', label=subkey)
+        
         plt.title(key)
         plt.xlabel('Noise Level')
         plt.ylabel('Average Density')
@@ -92,7 +95,7 @@ def main():
         args.n_neighbors,
         noiseLevels
     )
-    generate_plots(results, args.save_dir)
+    generate_plots(results, args.save_dir, noiseLevels)
 
 if __name__ == "__main__":
     main()
