@@ -52,19 +52,53 @@ def Lorenz_in(xyz, *, s=10, r=28, b=2.667, noiseType="None", noiseAddType=None, 
 # wrapper, generate data to a certain length L (default: 10000)
 def gen_Lorenz(s=10, r=28, b=2.667, noiseType=None, noiseWhen='in', noiseAddType="add", noiseLevel=0.1, L=10000):
     data = np.zeros((L+1, 3))
-    # initial conditions
-    data[0] = np.random.rand(3)
+
     dt = 0.01
+    flag_restart = True # to start the iteration 
+
     if noiseType==None or noiseType.lower()=="none":
-        for i in range(L):
-            data[i+1] = data[i] + Lorenz_in(data[i], s=s, r=r, b=b)*dt
-    else: # with noise
-        if noiseWhen.lower()=="in" or "in-generation":
+        # for i in range(L):
+        #     data[i+1] = data[i] + Lorenz_in(data[i], s=s, r=r, b=b)*dt
+        while flag_restart:
+            flag_restart=False
+            # initial conditions
+            data[0] = np.random.rand(3)
             for i in range(L):
                 data[i+1] = data[i] + Lorenz_in(data[i], s=s, r=r, b=b, noiseType=noiseType, noiseAddType=noiseAddType, noiseLevel=noiseLevel)*dt
+                if np.isnan(data[i+1]).any() or np.isinf(data[i+1]).any():
+                    data[i+1] = np.random.rand(3)
+                    flag_restart=True
+                    break
+                            
+    else: # with noise
+        if noiseWhen.lower()=="in" or "in-generation":
+            # for i in range(L):
+            #     data[i+1] = data[i] + Lorenz_in(data[i], s=s, r=r, b=b, noiseType=noiseType, noiseAddType=noiseAddType, noiseLevel=noiseLevel)*dt
+            while flag_restart:
+                flag_restart=False
+                # initial conditions
+                data[0] = np.random.rand(3)
+                for i in range(L):
+                    data[i+1] = data[i] + Lorenz_in(data[i], s=s, r=r, b=b, noiseType=noiseType, noiseAddType=noiseAddType, noiseLevel=noiseLevel)*dt
+                    if np.isnan(data[i+1]).any() or np.isinf(data[i+1]).any():
+                        data[i+1] = np.random.rand(3)
+                        flag_restart=True
+                        break
+ 
+
         elif noiseWhen.lower()=="post" or "post-generation":
-            for i in range(L):
-                data[i+1] = data[i] + Lorenz_in(data[i], s=s, r=r, b=b)*dt
+            # for i in range(L):
+            #     data[i+1] = data[i] + Lorenz_in(data[i], s=s, r=r, b=b)*dt
+            while flag_restart:
+                flag_restart=False
+                # initial conditions
+                data[0] = np.random.rand(3)
+                for i in range(L):
+                    data[i+1] = data[i] + Lorenz_in(data[i], s=s, r=r, b=b)*dt
+                    if np.isnan(data[i+1]).any() or np.isinf(data[i+1]).any():
+                        data[i+1] = np.random.rand(3)
+                        flag_restart=True
+                        break
             lp_add= np.random.laplace(0, noiseLevel, data.shape)
             g_add= np.random.normal(0, noiseLevel, data.shape)
             lp_mult= np.random.laplace(1, noiseLevel, data.shape)

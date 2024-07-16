@@ -11,7 +11,10 @@ def load_noise_data(noiseType, noiseWhen, noiseAddType, noiseLevel, data_dir):
     else:
         file_name = f"{noiseType}_{noiseWhen}_{noiseAddType}_{round(noiseLevel, 2)}.csv"
     file_path = os.path.join(data_dir, file_name)
-    return pd.read_csv(file_path)
+    df = pd.read_csv(file_path)
+    # fill NaN values with the mean of the column
+    df = df.fillna(df.mean())
+    return df
 
 # Function to create time delay embeddings
 def create_delay_embedding(series, delay=1, dimension=3):
@@ -69,7 +72,7 @@ def calculate_density(points, n_neighbors, epsilon=1e-10):
 # Function to calculate densities for neighborhoods from a source manifold
 def calculate_densities_from_source(manifolds, source_key, n_neighbors):
     source_embedding = manifolds[source_key]
-    _, indices = calculate_nearest_neighbors(source_embedding, n_neighbors)
+    distances, indices = calculate_nearest_neighbors(source_embedding, n_neighbors)
     densities = []
     for i, neighbors in enumerate(indices):
         time_indices = retrieve_time_indices(neighbors)
@@ -77,12 +80,13 @@ def calculate_densities_from_source(manifolds, source_key, n_neighbors):
         density_row = {'Index': i}
         density_row[f'{source_key}_Density'] = calculate_density(source_embedding[neighbors], n_neighbors)
         for key, points in corresponding_points.items():
-            if key != source_key and points.size > 0:
+            if points.size > 0:
                 density_row[f'{key}_Density'] = calculate_density(points, n_neighbors)
             else:
                 density_row[f'{key}_Density'] = np.nan  # Use NaN for empty points
         densities.append(density_row)
     return densities
+
 
 # Main function to execute the entire process and save results
 def main():

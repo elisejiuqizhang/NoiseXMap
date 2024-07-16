@@ -58,9 +58,8 @@ def generate_plots(results, save_dir, noiseLevels):
 
         plt.figure()
         for subkey in ['GroundTruth_Density', 'X_Density', 'Y_Density', 'Z_Density']:  # Include only relevant keys
-            if subkey in df['value'][0].keys():
-                y_values = df['value'].apply(lambda x: x.get(subkey, np.nan))
-                plt.plot(df['noise_level'], y_values, marker='o', label=subkey)
+            y_values = [df[df['noise_level'] == nl]['value'].apply(lambda x: x.get(subkey, np.nan)).values[0] if nl in df['noise_level'].values else np.nan for nl in noiseLevels]
+            plt.plot(noiseLevels, y_values, marker='o', label=subkey)
         
         plt.title(key)
         plt.xlabel('Noise Level')
@@ -85,6 +84,10 @@ def main():
     args = parser.parse_args()
 
     noiseLevels = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75]
+
+    save_dir=args.save_dir+'/'+f'_{args.noiseType}_{args.noiseWhen}_{args.noiseAddType}_delay{args.delay}_nn{args.n_neighbors}'
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
     
     results = load_and_process_density_files(
         args.output_dir, 
@@ -95,7 +98,7 @@ def main():
         args.n_neighbors,
         noiseLevels
     )
-    generate_plots(results, args.save_dir, noiseLevels)
+    generate_plots(results, save_dir, noiseLevels)
 
 if __name__ == "__main__":
     main()
