@@ -95,7 +95,7 @@ if args.downsampleType!=None and args.downsampleType.lower()!='none':
             data_downsampled[i//args.downsampleFactor]=np.mean(data[i:i+args.downsampleFactor], axis=0)
     elif args.downsampleType.lower() in ['d', 'de', 'decimation']:
         data_downsampled=data[::args.downsampleFactor]
-    elif args.downsampleType.lower() in ['s', 'sub', 'subsample']:
+    elif args.downsampleType.lower() in ['s', 'sub', 'subsample', 'half-subsample']:
         # my way of subsampling: 
         # In each segment of length args.downsampleFactor, randomly sample half of the interval size within, then take average
         data_downsampled=np.zeros((args.L//args.downsampleFactor,3))

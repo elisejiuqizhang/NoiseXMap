@@ -5,16 +5,35 @@ from sklearn.neighbors import NearestNeighbors
 import argparse
 
 # Function to load data based on noiseType, noiseWhen, noiseAddType, and noiseLevel
-def load_noise_data(noiseType, noiseWhen, noiseAddType, noiseLevel, data_dir):
+def load_noise_data(noiseType, noiseWhen, noiseAddType, noiseLevel, data_dir, downsampleType, downsampleFactor):
     if noiseLevel == 0:
         file_name = 'noNoise.csv'
     else:
         file_name = f"{noiseType}_{noiseWhen}_{noiseAddType}_{round(noiseLevel, 2)}.csv"
     file_path = os.path.join(data_dir, file_name)
-    df = pd.read_csv(file_path)
-    # fill NaN values with the mean of the column
-    df = df.fillna(df.mean())
-    return df
+    original_data=pd.read_csv(file_path)
+    if downsampleType==None or downsampleType=="None" or downsampleType=='none':
+        return original_data
+    else:
+        n = len(original_data)
+        downsample_arr=np.zeros((n // downsampleFactor, original_data.shape[1]))
+        if downsampleType.lower() in ['a', 'av', 'average']:
+            for i in range(0,n,downsampleFactor):
+                segment=original_data.iloc[i:i+downsampleFactor]
+                if len(segment) == downsampleFactor:
+                    downsample_arr[i//downsampleFactor]=np.mean(segment, axis=0)
+        elif downsampleType.lower() in ['d', 'de', 'decimation', 'remove']:
+            downsample_arr=original_data.iloc[::downsampleFactor]
+        elif downsampleType.lower() in ['s', 'sub', 'subsample', 'half-subsample']:
+            for i in range(0,n,downsampleFactor):
+                segment=original_data.iloc[i:i+downsampleFactor]
+                if len(segment) == downsampleFactor:
+                    rdm_start = np.random.randint(0, len(segment) // 2)
+                    downsample_arr[i//downsampleFactor]=np.mean(segment[rdm_start:rdm_start+len(segment)//2], axis=0)
+        else:
+            raise ValueError("Invalid downsampleType")
+        return pd.DataFrame(downsample_arr, columns=original_data.columns)
+    
 
 # Function to create time delay embeddings
 def create_delay_embedding(series, delay=1, dimension=3):
@@ -100,12 +119,20 @@ def main():
     parser.add_argument('--data_dir', type=str, default='/home/automation/elisejzh/Desktop/elisejzh/Projects/Mine/NoiseXMap/data/Lorenz', help='Directory with input data')
     parser.add_argument('--output_dir', type=str, default='/home/automation/elisejzh/Desktop/elisejzh/Projects/Mine/NoiseXMap/outputs/LorenzNNDensity', help='Directory to save the output results')
 
+    parser.add_argument('--downsampleType', type=str, default=None, help='downsample type, options: None, "a/av/average" (average), "d/de/decimation" (remove/discard the rest), "s/sub/subsample" (randomly sample a subset of half the interval size from each interval, then average)')
+    parser.add_argument('--downsampleFactor', type=int, default=10, help='downsample interval')
+
     args = parser.parse_args()
     
-    df = load_noise_data(args.noiseType, args.noiseWhen, args.noiseAddType, args.noiseLevel, args.data_dir)
+    df = load_noise_data(args.noiseType, args.noiseWhen, args.noiseAddType, args.noiseLevel, args.data_dir, args.downsampleType, args.downsampleFactor)
     manifolds = formulate_manifolds(df, args.delay)
     
     output_subdir = os.path.join(args.output_dir, f"{args.noiseType}_{args.noiseWhen}_{args.noiseAddType}_{round(args.noiseLevel, 2)}_delay{args.delay}_nn{args.n_neighbors}")
+    # if no downsample
+    if args.downsampleType==None or args.downsampleType=="None" or args.downsampleType=='none':
+        output_subdir = os.path.join(output_subdir, 'noDownsample')
+    else: # if downsample
+        output_subdir = os.path.join(output_subdir, args.downsampleType, str(args.downsampleFactor))
     if not os.path.exists(output_subdir):
         os.makedirs(output_subdir)
     
