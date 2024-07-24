@@ -25,6 +25,13 @@ parser.add_argument('--noiseWhen', type=str, default='in', help='when to add noi
 parser.add_argument('--noiseAddType', type=str, default='add', help='additive or multiplicative noise, options: "additive"/"add", "multiplicative"/"mult", "both", only effective when noiseType is not None')
 parser.add_argument('--noiseLevel', type=float, default=1e-2, help='noise level, only effective when noiseType is not None')
 
+# Note that the available cause and effect names:
+# BiVarLogistic: X, Y
+# Lorenz: X, Y, Z
+# RosslerLorenz: X1, Y1, Z1, X2, Y2, Z2
+parser.add_argument('--cause', type=str, default='X', help='cause variable')
+parser.add_argument('--effect', type=str, default='Y', help='effect variable')
+
 parser.add_argument('--tau', type=int, default=1, help="CCM tau-lag")
 parser.add_argument('--emd', type=int, default=2, help="CCM embedding dimension")
 
@@ -62,22 +69,30 @@ if not os.path.exists(output_dir):
 
 # read data, since it is already generated
 data_dir=os.path.join(root, 'data', args.dataType)
-if args.noiseType==None or args.noiseType.lower()=='none':
+if args.noiseType==None or args.noiseType.lower()=='none' or args.noiseType.lower()=='nonoise':
     file_name=os.path.join(data_dir, 'noNoise.csv')
 else:
     file_name=os.path.join(data_dir, args.noiseType+"_"+args.noiseWhen+"_"+args.noiseAddType+"_"+str(args.noiseLevel)+'.csv')
     
 df=pd.read_csv(file_name)
 
-if args.dataType.lower()=='bivarlogistic' or args.dataType.lower()=='bilog':
-    cause='X'
-    effect='Y'
-elif args.dataType.lower()=='lorenz' or args.dataType.lower()=='l':
-    cause='X'
-    effect='Z'
-elif args.dataType.lower()=='rosslerlorenz' or args.dataType.lower()=='rl':
-    cause='X1'
-    effect='X2'
+# if args.dataType.lower()=='bivarlogistic' or args.dataType.lower()=='bilog':
+#     cause='X'
+#     effect='Y'
+# elif args.dataType.lower()=='lorenz' or args.dataType.lower()=='l':
+#     cause='X'
+#     # effect='Z'
+#     effect='Y'
+# elif args.dataType.lower()=='rosslerlorenz' or args.dataType.lower()=='rl':
+#     cause='X1'
+#     effect='X2'
+
+# Note that the available cause and effect names:
+# BiVarLogistic: X, Y
+# Lorenz: X, Y, Z
+# RosslerLorenz: X1, Y1, Z1, X2, Y2, Z2
+cause=args.cause
+effect=args.effect
 
 # downsample
 if args.downsampleType!=None and args.downsampleType.lower()!='none':
@@ -93,7 +108,7 @@ if args.downsampleType!=None and args.downsampleType.lower()!='none':
 totalL=len(df)
 
 # save path - add subfolder for the data type
-output_dir=os.path.join(output_dir, args.dataType)
+output_dir=os.path.join(output_dir, args.dataType+'('+cause+effect+')')
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
@@ -163,8 +178,8 @@ np.save(os.path.join(output_dir, 'arr_sc2.npy'), arr_sc2)
 
 # visualize by plotting: average of sc over seeds - L, also plot the std as error bar
 plt.figure()
-plt.errorbar(range_L, np.mean(arr_sc1, axis=0), yerr=np.std(arr_sc1, axis=0), label='sc1: '+cause+'->'+effect)
-plt.errorbar(range_L, np.mean(arr_sc2, axis=0), yerr=np.std(arr_sc2, axis=0), label='sc2: '+effect+'->'+cause)
+plt.errorbar(range_L, np.mean(arr_sc1, axis=0), yerr=np.std(arr_sc1, axis=0), label='sc1: '+cause+'->'+effect, color='r')
+plt.errorbar(range_L, np.mean(arr_sc2, axis=0), yerr=np.std(arr_sc2, axis=0), label='sc2: '+effect+'->'+cause, color='g')
 plt.xlabel('L')
 plt.ylabel('sc')
 if args.noiseType==None or args.noiseType.lower()=='none':

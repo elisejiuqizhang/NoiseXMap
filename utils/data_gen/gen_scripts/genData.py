@@ -13,7 +13,7 @@ from utils.data_gen.RosslerLorenz import gen_RosslerLorenz
 import argparse
 parser=argparse.ArgumentParser('viz increasing L vs. avgCorr for CCM')
 
-parser.add_argument('--dataType', type=str, default='Lorenz', help='data type to use, options: "BiVarLogistic" ("BiLog"), "Lorenz" ("L"), "RosslerLorenz" ("RL")')
+parser.add_argument('--dataType', type=str, default='BiVarLogistic', help='data type to use, options: "BiVarLogistic" ("BiLog"), "Lorenz" ("L"), "RosslerLorenz" ("RL")')
 parser.add_argument('--noiseType', type=str, default=None, help='noise type to use, options: None, "laplacian"/"lpNoise"/"l", "gaussian"/"gNoise"/"g"')
 parser.add_argument('--noiseWhen', type=str, default='in', help='when to add noise, options: "in-generation"/"in", "post-generation"/"post", only effective when noiseType is not None')
 parser.add_argument('--noiseAddType', type=str, default='add', help='additive or multiplicative noise, options: "additive"/"add", "multiplicative"/"mult", "both", only effective when noiseType is not None')
@@ -35,7 +35,7 @@ else:
 
 # generate data
 if args.dataType.lower()=='bivarlogistic' or args.dataType.lower()=='bilog':
-    data=gen_BiVarLogistic(a_x=3.7, a_y=3.72, b_xy=0.35, b_yx=0.06, noiseType=args.noiseType, noiseWhen=args.noiseWhen, noiseAddType=args.noiseAddType, noiseLevel=args.noiseLevel, L=args.L)
+    data=gen_BiVarLogistic(a_x=3.7, a_y=3.72, b_xy=0.45, b_yx=0.25, noiseType=args.noiseType, noiseWhen=args.noiseWhen, noiseAddType=args.noiseAddType, noiseLevel=args.noiseLevel, L=args.L)
 elif args.dataType.lower()=='lorenz' or args.dataType.lower()=='l':
     data=gen_Lorenz(noiseType=args.noiseType, noiseWhen=args.noiseWhen, noiseAddType=args.noiseAddType, noiseLevel=args.noiseLevel, L=args.L)
 elif args.dataType.lower()=='rosslerlorenz' or args.dataType.lower()=='rl':
