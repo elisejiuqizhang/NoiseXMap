@@ -9,6 +9,9 @@ import pandas as pd
 import random
 import matplotlib.pyplot as plt
 
+import scipy
+from scipy import signal, ndimage
+
 from utils.data_gen.BiVarLogistic import gen_BiVarLogistic
 from utils.data_gen.Lorenz import gen_Lorenz
 from utils.data_gen.RosslerLorenz import gen_RosslerLorenz
@@ -18,10 +21,12 @@ from utils.XMap.CM_simplex import CM_simplex
 
 import argparse
 parser=argparse.ArgumentParser('viz increasing L vs. avgCorr for CCM')
-parser.add_argument('--downsampleType', type=str, default='average', help='downsample type, options: None, "a/av/average" (average), "d/de/decimation" (remove/discard the rest), "s/sub/subsample" (randomly sample a subset of half the interval size from each interval, then average)')
-parser.add_argument('--downsampleFactor', type=int, default=10, help='downsample interval')
+# parser.add_argument('--downsampleType', type=str, default='average', help='downsample type, options: None, "a/av/average" (average), "d/de/decimation" (remove/discard the rest), "s/sub/subsample" (randomly sample a subset of half the interval size from each interval, then average)')
+# parser.add_argument('--downsampleFactor', type=int, default=10, help='downsample interval')
+parser.add_argument('--filterType', type=str, default='average', help='Options: (plain) average, median, gaussian, butterworth')
+parser.add_argument('--filterFactor', type=int, default=10, help='1D filter size, or cutoff frequency for butterworth filter')
 
-parser.add_argument('--dataType', type=str, default='BiVarLogistic', help='data type to use, options: "BiVarLogistic" ("BiLog"), "Lorenz" ("L"), "RosslerLorenz" ("RL"), "ERA5"')
+parser.add_argument('--dataType', type=str, default='BiVarLogistic', help='data type to use, options: "BiVarLogistic" ("BiLog"), "Lorenz" ("L"), "RosslerLorenz" ("RL")')
 parser.add_argument('--noiseType', type=str, default=None, help='noise type to use, options: None, "laplacian"/"lpNoise"/"l", "gaussian"/"gNoise"/"g"')
 parser.add_argument('--noiseWhen', type=str, default='in', help='when to add noise, options: "in-generation"/"in", "post-generation"/"post", only effective when noiseType is not None')
 parser.add_argument('--noiseAddType', type=str, default='add', help='additive or multiplicative noise, options: "additive"/"add", "multiplicative"/"mult", "both", only effective when noiseType is not None')
@@ -31,7 +36,6 @@ parser.add_argument('--noiseLevel', type=float, default=1e-2, help='noise level,
 # BiVarLogistic: X, Y
 # Lorenz: X, Y, Z
 # RosslerLorenz: X1, Y1, Z1, X2, Y2, Z2
-# ERA5: tcw,T_2m,T_adv_950,T_adv_850,rad,rad_cs,terr_rad,terr_rad_cs,solar_rad,solar_rad_cs
 parser.add_argument('--cause', type=str, default='X', help='cause variable')
 parser.add_argument('--effect', type=str, default='Y', help='effect variable')
 
@@ -45,7 +49,7 @@ parser.add_argument('--numSeeds', type=int, default=6, help='number of seeds to 
 args=parser.parse_args()
 
 # save path
-output_dir=os.path.join(root, 'outputs', 'exps', 'ccm_increasingL_noise')
+output_dir=os.path.join(root, 'outputs', 'exps', 'ccm_increasingL_noise_filters')
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
@@ -55,7 +59,6 @@ if not os.path.exists(output_dir):
 # RosslerLorenz: X1, Y1, Z1, X2, Y2, Z2
 cause=args.cause
 effect=args.effect
-
 
 # read data, since it is already generated
 data_dir=os.path.join(root, 'data', args.dataType)
@@ -72,17 +75,24 @@ else:
 
 
 
-
-# downsample
-if args.downsampleType!=None and args.downsampleType.lower()!='none':
-    if args.downsampleType.lower() in ['a', 'av', 'average']:
-        df=df.groupby(np.arange(len(df))//args.downsampleFactor).mean()
-    elif args.downsampleType.lower() in ['d', 'de', 'decimation']:
-        df=df.iloc[::args.downsampleFactor]
-    elif args.downsampleType.lower() in ['s', 'sub', 'subsample']:
-        df=df.groupby(np.arange(len(df))//args.downsampleFactor).apply(lambda x: x.sample(frac=0.5)).reset_index(drop=True)
-    else:
-        raise ValueError('Unknown downsampleType')
+# filters
+if args.filterType.lower() in ['a', 'av', 'average']:
+    df=df.rolling(args.filterFactor).mean()
+    # drop the first few rows with NaN
+    df=df.dropna()
+elif args.filterType.lower() in ['m', 'med', 'median']:
+    df=df.rolling(args.filterFactor).median()
+    # drop the first few rows with NaN
+    df=df.dropna()
+elif args.filterType.lower() in ['g', 'ga', 'gaussian']:
+    df=ndimage.gaussian_filter1d(df, args.filterFactor)
+elif args.filterType.lower() in ['b', 'bu', 'butterworth']:
+    # cutoff frequency
+    cutoff=1/(args.filterFactor)
+    # b, a = signal.butter(5, cutoff, 'low')
+    # df=signal.filtfilt(b, a, df)
+    sos=signal.butter(8, cutoff, 'low', output='sos')
+    df=signal.sosfiltfilt(sos, df, padtype=None)
 
 totalL=len(df)
 
@@ -91,13 +101,22 @@ output_dir=os.path.join(output_dir, args.dataType+'('+cause+effect+')')
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
-# if no downsampling, save to subfolder "noDownsample"
-if args.downsampleType==None or args.downsampleType.lower() == 'none':
-    output_dir = os.path.join(output_dir, 'noDownsample')
+# # if no downsampling, save to subfolder "noDownsample"
+# if args.downsampleType==None or args.downsampleType.lower() == 'none':
+#     output_dir = os.path.join(output_dir, 'noDownsample')
+#     if not os.path.exists(output_dir):
+#         os.makedirs(output_dir)
+# else:
+#     output_dir = os.path.join(output_dir, 'Downsampled', args.downsampleType+'_'+str(args.downsampleFactor))
+#     if not os.path.exists(output_dir):
+#         os.makedirs(output_dir)
+# if no filtering, save to subfolder "noFilter"
+if args.filterType.lower() in ['none', 'no', 'nofilter']:
+    output_dir = os.path.join(output_dir, 'noFilter')
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 else:
-    output_dir = os.path.join(output_dir, 'Downsampled', args.downsampleType+'_'+str(args.downsampleFactor))
+    output_dir = os.path.join(output_dir, 'Filtered', args.filterType+'_'+str(args.filterFactor))
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
         
@@ -116,30 +135,30 @@ if args.dataType.lower()!='era5':
         os.makedirs(output_dir)
 
 
-
 # # range of L
 # stepL=int(args.maxL/args.numL)
 # range_L=np.arange(stepL, args.maxL+1, stepL)
 # arr_sc1=np.zeros((args.numSeeds, args.numL))
 # arr_sc2=np.zeros((args.numSeeds, args.numL))
 
-# maxL and stepL depending on whether there is downsampling
-if args.downsampleType is None or args.downsampleType.lower() == 'none':
-    maxL = args.maxL
-    numL = args.numL
-    stepL = int(maxL/numL)
-    range_L = np.arange(stepL, maxL+1, stepL)
-else:
-    # maxL = args.maxL//args.downsampleFactor
-    # numL = args.numL
-    # stepL = int(maxL/numL)
-    # range_L = np.arange(stepL, maxL+1, stepL)
+# # maxL and stepL depending on whether there is downsampling
+# if args.downsampleType is None or args.downsampleType.lower() == 'none':
+#     maxL = args.maxL
+#     numL = args.numL
+#     stepL = int(maxL/numL)
+#     range_L = np.arange(stepL, maxL+1, stepL)
+# else:
+#     maxL = args.maxL//args.downsampleFactor
+#     numL = args.numL
+#     stepL = int(maxL/numL)
+#     range_L = np.arange(stepL, maxL+1, stepL)
 
-    # Aug. 12 temporary update: keep the maxL and numL the same as the original, but the range_L will be different
-    maxL = args.maxL
-    numL = args.numL
-    stepL = int(maxL/numL)
-    range_L = np.arange(stepL, maxL+1, stepL)
+
+maxL = args.maxL
+numL = args.numL
+stepL = int(maxL/numL)
+range_L = np.arange(stepL, maxL+1, stepL)
+
 
 arr_sc1=np.zeros((args.numSeeds, numL))
 arr_sc2=np.zeros((args.numSeeds, numL))

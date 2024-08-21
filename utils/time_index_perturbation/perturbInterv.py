@@ -15,7 +15,7 @@ def perturbInterv(data, lenInterv=5, percentInterv=0.5, swapPercent=0.5):
         data (pd.DataFrame or np.ndarray): time series data, can be multivar;
         lenInterv (int): length of interval to swap;
         percentInterv (float): percentage of intervals to swap;
-        
+        swapPercent (float): percentage of points to swap within each interval;
     Output:
         data_perturb (pd.DataFrame or np.ndarray): perturbed time series data;
     """
