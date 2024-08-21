@@ -219,7 +219,7 @@ def gen_Lorenz_singleVarNoise(s=10, r=28, b=2.667, noiseVar='x', noiseType='gNoi
     dt = 0.01
     flag_restart = True # to start the iteration 
     
-    if noiseWhen.lower()=='in':
+    if noiseWhen.lower()=="in" or noiseWhen.lower()=="in-generation":
         while flag_restart:
             flag_restart=False
             # initial conditions
@@ -232,7 +232,7 @@ def gen_Lorenz_singleVarNoise(s=10, r=28, b=2.667, noiseVar='x', noiseType='gNoi
                     break
         return data
     
-    elif noiseWhen.lower()=='post':
+    elif noiseWhen.lower()=='post' or noiseWhen.lower()=='post-generation':
         while flag_restart:
             flag_restart=False
             # initial conditions
@@ -243,10 +243,10 @@ def gen_Lorenz_singleVarNoise(s=10, r=28, b=2.667, noiseVar='x', noiseType='gNoi
                     data[i+1] = np.random.rand(3)
                     flag_restart=True
                     break
-        lp_add= np.random.laplace(0, noiseLevel, (data.shape[0]))
-        g_add= np.random.normal(0, noiseLevel, (data.shape[0]))
-        lp_mult= np.random.laplace(1, noiseLevel, (data.shape[0]))
-        g_mult= np.random.normal(1, noiseLevel, (data.shape[0]))
+        lp_add= np.random.laplace(0, noiseLevel, data.shape[0])
+        g_add= np.random.normal(0, noiseLevel, data.shape[0])
+        lp_mult= np.random.laplace(1, noiseLevel, data.shape[0])
+        g_mult= np.random.normal(1, noiseLevel, data.shape[0])
         if noiseVar.lower()=='x':
             if noiseType.lower()=='l' or 'laplacian' or 'lap' or 'l' or 'lpNoise':
                 if noiseAddType.lower()=="mult" or 'multiplicative':

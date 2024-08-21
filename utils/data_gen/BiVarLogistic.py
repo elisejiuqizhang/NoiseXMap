@@ -112,6 +112,111 @@ def gen_BiVarLogistic(a_x=3.7, a_y=3.72, b_xy=0.35, b_yx=0.32, noiseType=None, n
                     data=data*g_mult+g_add
     return data
 
+# BiVarLogistic singlar variable noise injection - in-generation (process noise)
+def BiVarLogistic_in_singleV(X, a_x=3.8, a_y=3.5, b_xy=0.3, b_yx=0.3, noiseVar='x', noiseType='gNoise', noiseAddType="add", noiseLevel=0.1):
+    x, y = X
+    x_next = x*(a_x*(1-x) - b_yx*y)
+    y_next = y*(a_y*(1-y) - b_xy*x)
+    if noiseVar.lower()=='x':
+        if noiseType.lower()=='laplace' or noiseType.lower()=='lpnoise' or noiseType.lower()=='lap' or noiseType.lower()=='lp' or noiseType.lower()=='l':
+            if noiseAddType.lower()=='mult' or noiseAddType.lower()=='multiplicative':
+                x_next *= np.random.laplace(1, noiseLevel)
+            elif noiseAddType.lower()=='add' or noiseAddType.lower()=='additive':
+                x_next += np.random.laplace(0, noiseLevel)
+            elif noiseAddType.lower()=='both':
+                x_next = x_next*np.random.laplace(1, noiseLevel) + np.random.laplace(0, noiseLevel)
+        elif noiseType.lower()=='gaussian' or noiseType.lower()=='gnoise' or noiseType.lower()=='gaus' or noiseType.lower()=='g':
+            if noiseAddType.lower()=='mult' or noiseAddType.lower()=='multiplicative':
+                x_next *= np.random.normal(1, noiseLevel)
+            elif noiseAddType.lower()=='add' or noiseAddType.lower()=='additive':
+                x_next += np.random.normal(0, noiseLevel)
+            elif noiseAddType.lower()=='both':
+                x_next = x_next*np.random.normal(1, noiseLevel) + np.random.normal(0, noiseLevel)
+    elif noiseVar.lower()=='y':
+        if noiseType.lower()=='laplace' or noiseType.lower()=='lpnoise' or noiseType.lower()=='lap' or noiseType.lower()=='lp' or noiseType.lower()=='l':
+            if noiseAddType.lower()=='mult' or noiseAddType.lower()=='multiplicative':
+                y_next *= np.random.laplace(1, noiseLevel)
+            elif noiseAddType.lower()=='add' or noiseAddType.lower()=='additive':
+                y_next += np.random.laplace(0, noiseLevel)
+            elif noiseAddType.lower()=='both':
+                y_next = y_next*np.random.laplace(1, noiseLevel) + np.random.laplace(0, noiseLevel)
+        elif noiseType.lower()=='gaussian' or noiseType.lower()=='gnoise' or noiseType.lower()=='gaus' or noiseType.lower()=='g':
+            if noiseAddType.lower()=='mult' or noiseAddType.lower()=='multiplicative':
+                y_next *= np.random.normal(1, noiseLevel)
+            elif noiseAddType.lower()=='add' or noiseAddType.lower()=='additive':
+                y_next += np.random.normal(0, noiseLevel)
+            elif noiseAddType.lower()=='both':
+                y_next = y_next*np.random.normal(1, noiseLevel) + np.random.normal(0, noiseLevel)
+    return np.array([x_next, y_next])
+
+# wrapper, generate data to a certain length L (default: 10000)
+def gen_BiVarLogistic_singleVarNoise(a_x=3.7, a_y=3.72, b_xy=0.35, b_yx=0.32, noiseVar='x', noiseType='gNoise', noiseWhen='in', noiseAddType="add", noiseLevel=0.1, L=10000):
+    data = np.zeros((L+1, 2))
+    
+    if noiseWhen.lower()=="in" or noiseWhen.lower()=="in-generation":
+        flag_rerun=True
+        while(flag_rerun):
+            # sample initial conditions
+            data[0]=np.random.rand(2)
+            flag_rerun=False
+            for i in range(L):
+                data[i+1] = BiVarLogistic_in_singleV(data[i], a_x=a_x, a_y=a_y, b_xy=b_xy, b_yx=b_yx, noiseVar=noiseVar, noiseType=noiseType, noiseAddType=noiseAddType, noiseLevel=noiseLevel)
+                # check if there is divergence or nan values
+                if np.isnan(data[i+1]).any() or np.isinf(data[i+1]).any():
+                    flag_rerun=True
+                    break
+        return data
+    
+    elif noiseWhen.lower()=="post" or noiseWhen.lower()=="post-generation":
+        flag_rerun=True
+        while(flag_rerun):
+            # sample initial conditions
+            data[0]=np.random.rand(2)
+            flag_rerun=False
+            for i in range(L):
+                data[i+1] = BiVarLogistic_in(data[i], a_x=a_x, a_y=a_y, b_xy=b_xy, b_yx=b_yx, noiseType=None)
+                # check if there is divergence or nan values
+                if np.isnan(data[i+1]).any() or np.isinf(data[i+1]).any():
+                    flag_rerun=True
+                    break
+        lp_add= np.random.laplace(0, noiseLevel, data.shape[0])
+        g_add= np.random.normal(0, noiseLevel, data.shape[0])
+        lp_mult= np.random.laplace(1, noiseLevel, data.shape[0])
+        g_mult= np.random.normal(1, noiseLevel, data.shape[0])
+
+        if noiseVar.lower()=='x':
+            if noiseType.lower()=='laplace' or noiseType.lower()=='lpnoise' or noiseType.lower()=='lap' or noiseType.lower()=='lp' or noiseType.lower()=='l':
+                if noiseAddType.lower()=="mult" or noiseAddType.lower()=='multiplicative':
+                    data[:,0]=data[:,0]*lp_mult
+                elif noiseAddType.lower()=='add' or noiseAddType.lower()=='additive':
+                    data[:,0]=data[:,0]+lp_add
+                elif noiseAddType.lower()=="both":
+                    data[:,0]=data[:,0]*lp_mult+lp_add
+            elif noiseType.lower()=='gaussian' or noiseType.lower()=='gnoise' or noiseType.lower()=='gaus' or noiseType.lower()=='g':
+                if noiseAddType.lower()=="mult" or noiseAddType.lower()=='multiplicative':
+                    data[:,0]=data[:,0]*g_mult
+                elif noiseAddType.lower()=='add' or noiseAddType.lower()=='additive':
+                    data[:,0]=data[:,0]+g_add
+                elif noiseAddType.lower()=="both":
+                    data[:,0]=data[:,0]*g_mult+g_add
+        elif noiseVar.lower()=='y':
+            if noiseType.lower()=='laplace' or noiseType.lower()=='lpnoise' or noiseType.lower()=='lap' or noiseType.lower()=='lp' or noiseType.lower()=='l':
+                if noiseAddType.lower()=="mult" or noiseAddType.lower()=='multiplicative':
+                    data[:,1]=data[:,1]*lp_mult
+                elif noiseAddType.lower()=='add' or noiseAddType.lower()=='additive':
+                    data[:,1]=data[:,1]+lp_add
+                elif noiseAddType.lower()=="both":
+                    data[:,1]=data[:,1]*lp_mult+lp_add
+            elif noiseType.lower()=='gaussian' or noiseType.lower()=='gnoise' or noiseType.lower()=='gaus' or noiseType.lower()=='g':
+                if noiseAddType.lower()=="mult" or noiseAddType.lower()=='multiplicative':
+                    data[:,1]=data[:,1]*g_mult
+                elif noiseAddType.lower()=='add' or noiseAddType.lower()=='additive':
+                    data[:,1]=data[:,1]+g_add
+                elif noiseAddType.lower()=="both":
+                    data[:,1]=data[:,1]*g_mult+g_add
+    return data
+
+
 
 # # try to visualize the data to test
 # import os, sys
@@ -121,7 +226,8 @@ def gen_BiVarLogistic(a_x=3.7, a_y=3.72, b_xy=0.35, b_yx=0.32, noiseType=None, n
 
 # from XMap.DelayEmd import time_delay_embed
 # import matplotlib.pyplot as plt
-# data = gen_BiVarLogistic(noiseType='l', noiseWhen='in', noiseAddType='both', noiseLevel=0.001, L=10000)
+# # data = gen_BiVarLogistic(noiseType='l', noiseWhen='in', noiseAddType='both', noiseLevel=0.001, L=10000)
+# data=gen_BiVarLogistic_singleVarNoise(noiseVar='x', noiseType='gNoise', noiseWhen='in', noiseAddType='both', noiseLevel=0.001, L=10000)
 
 # # 2D
 # plot_L = 10000
