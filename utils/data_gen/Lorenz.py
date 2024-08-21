@@ -312,30 +312,30 @@ def gen_Lorenz_singleVarNoise(s=10, r=28, b=2.667, noiseVar='x', noiseType='gNoi
                     return data
 
 
-# try to visualize the data to test
-import os, sys
-root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(root)
-print(root)
+# # try to visualize the data to test
+# import os, sys
+# root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# sys.path.append(root)
+# print(root)
 
-from XMap.DelayEmd import time_delay_embed
-import matplotlib.pyplot as plt
+# from XMap.DelayEmd import time_delay_embed
+# import matplotlib.pyplot as plt
 
-L=10000
+# L=10000
 
-# data = gen_Lorenz(noiseType='l', noiseWhen='in', noiseAddType='both', noiseLevel=0.6, L=L)
-data = gen_Lorenz_singleVarNoise(noiseVar='z', noiseType='g', noiseWhen='in', noiseAddType='both', noiseLevel=0.8, L=L)
+# # data = gen_Lorenz(noiseType='l', noiseWhen='in', noiseAddType='both', noiseLevel=0.6, L=L)
+# data = gen_Lorenz_singleVarNoise(noiseVar='z', noiseType='g', noiseWhen='in', noiseAddType='both', noiseLevel=0.8, L=L)
 
-plot_L = 2000
-tau=2
-emd=3
+# plot_L = 2000
+# tau=2
+# emd=3
 
-# loop over all variables
-for i in range(data.shape[1]):
-    data_emd=time_delay_embed(data[int(L/3*2+1):int(L/3*2+1)+plot_L,i], tau, emd)
-    # 3d plot
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.plot(data_emd[:,0], data_emd[:,1], data_emd[:,2])
-    plt.show()
-    plt.savefig('Lorenz'+str(i)+'.png')
+# # loop over all variables
+# for i in range(data.shape[1]):
+#     data_emd=time_delay_embed(data[int(L/3*2+1):int(L/3*2+1)+plot_L,i], tau, emd)
+#     # 3d plot
+#     fig = plt.figure()
+#     ax = fig.add_subplot(111, projection='3d')
+#     ax.plot(data_emd[:,0], data_emd[:,1], data_emd[:,2])
+#     plt.show()
+#     plt.savefig('Lorenz'+str(i)+'.png')
