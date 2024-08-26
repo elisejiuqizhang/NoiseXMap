@@ -23,47 +23,51 @@ viz_save_dir=os.path.join(root, 'outputs','viz', 'ccm_increasingL_noise_avg_down
 # list_downsampleTypes=['average', 'decimation', 'subsample']
 # list_downsampleFactors=[3,5,8,10]
 
-list_noiseLevels=[0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75]
+# list_noiseLevels=[0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75]
 # list_noiseLevels=[0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
+# list_noiseLevels=[0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15]
+# list_noiseLevels=[ 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15]
+list_noiseLevels=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
 list_systems=['Lorenz']
 # list_systems=['RosslerLorenz']
 
 # list_noiseTypes=['gNoise', 'lpNoise']
-list_noiseTypes=['lpNoise']
-# list_noiseTypes=['gNoise']
+# list_noiseTypes=['lpNoise']
+list_noiseTypes=['gNoise']
 
-# list_noiseAddTypes=['add', 'mult', 'both']
-list_noiseAddTypes=['add']
+list_noiseAddTypes=['add', 'mult', 'both']
+# list_noiseAddTypes=['add']
 # list_noiseAddTypes=['mult']
 # list_noiseAddTypes=['both']
 
-# list_noiseWhen=['in', 'post']
+list_noiseWhen=['in', 'post']
 # list_noiseWhen=['in']
-list_noiseWhen=['post']
+# list_noiseWhen=['post']
 
 # list_downsampleTypes=['average', 'decimation', 'subsample']
 # list_downsampleTypes=['average', 'decimation']
 list_downsampleTypes=['average']
 # list_downsampleTypes=['subsample']
 
-list_downsampleFactors=[3,5,8,10]
+# list_downsampleFactors=[3,5,8,10]
 # list_downsampleFactors=[3,5]
+list_downsampleFactors=[5,8,10]
 
 
 # list_filters=["average", "median", "gaussian", "butterworth"]
 list_filters=["average"]
 
 # list_filterFactors=[5,8,10]
-list_filterFactors=[5]
+list_filterFactors=[5,8,10]
 
 tau=1
 emd=3
 
 for system in list_systems:
     if system=='Lorenz':
-        list_cause_effect_pairs=['XY','XZ','YZ']
-        # list_cause_effect_pairs=['XY']
+        # list_cause_effect_pairs=['XY','XZ','YZ']
+        list_cause_effect_pairs=['XY']
         # list_cause_effect_pairs=['XZ']
         # list_cause_effect_pairs=['YZ']
     elif system=='RosslerLorenz':
@@ -74,7 +78,8 @@ for system in list_systems:
     
     for ce_pair in list_cause_effect_pairs:
         # 1. load the reference data (the no noise, no downsampling case)- will be a flat dashed line as reference in the plot
-        noNoise_dir=os.path.join(data_source_dir, system+'('+ce_pair+')', 'noDownsample', f'tau{tau}_emd{emd}', 'noNoise')
+        # noNoise_dir=os.path.join(data_source_dir, system+'('+ce_pair+')', 'noDownsample', f'tau{tau}_emd{emd}', 'noNoise')
+        noNoise_dir=os.path.join(data_source_dir, system+'('+ce_pair+')240819', 'noDownsample', f'tau{tau}_emd{emd}', 'noNoise')
         noNoise_arr_sc1=np.load(os.path.join(noNoise_dir, 'arr_sc1.npy'))
         noNoise_arr_sc2=np.load(os.path.join(noNoise_dir, 'arr_sc2.npy'))
         # assume the last column values are the converged highest value, take average and this will be the reference line in the plot
@@ -86,7 +91,7 @@ for system in list_systems:
             for noiseAddType in list_noiseAddTypes: # add, mult, both
                 for noiseWhen in list_noiseWhen: # in, post
                     # noise data - no downsample directory
-                    noise_noD_dir=os.path.join(data_source_dir, system+'('+ce_pair+')', 'noDownsample', f'tau{tau}_emd{emd}', noiseType, noiseWhen+'_'+noiseAddType+'_')
+                    noise_noD_dir=os.path.join(data_source_dir, system+'('+ce_pair+')240819', 'noDownsample', f'tau{tau}_emd{emd}', noiseType, noiseWhen+'_'+noiseAddType+'_')
                     # load the .npy files in order of the noise levels
                     noise_noD_avg_sc1=[]
                     noise_noD_avg_sc2=[]
@@ -99,7 +104,7 @@ for system in list_systems:
                         noise_noD_avg_sc2.append(np.mean(noise_noD_arr_sc2[:,-3:-1]))
 
                     # noise data - downsampled direction
-                    noise_D_dir=os.path.join(data_source_dir, system+'('+ce_pair+')', 'Downsampled')
+                    noise_D_dir=os.path.join(data_source_dir, system+'('+ce_pair+')240819', 'Downsampled')
                     for downsampleType in list_downsampleTypes: # average, decimation, subsample - each type is having its own plot along with the reference and the noise-noDownsample curves
                         noise_DType_dir=os.path.join(noise_D_dir, downsampleType+'_')
                         # each DType and DFactor gets their own curve plotted
@@ -144,11 +149,11 @@ for system in list_systems:
                         fig=plt.figure(figsize=(13,8))
                         ax=fig.add_subplot(111)
                         ax.plot(list_noiseLevels, [noNoise_avg_sc1]*len(list_noiseLevels), 'k--', label='No noise')
-                        ax.plot(list_noiseLevels, noise_noD_avg_sc1, color='c', label=f'{noiseType}_{noiseAddType}_{noiseWhen}-no Downsampling')
+                        ax.plot(list_noiseLevels, noise_noD_avg_sc1, color='c', label=f'{noiseType}_{noiseAddType}_{noiseWhen}-no Filtering/Downsampling')
                         for i in range(len(list_downsampleFactors)):
-                            ax.plot(list_noiseLevels, list_noise_D_sc1_acrossDownFactors[i], label=f'{noiseType}_{noiseAddType}_{noiseWhen}-{downsampleType}_{list_downsampleFactors[i]}')
+                            ax.plot(list_noiseLevels, list_noise_D_sc1_acrossDownFactors[i], label=f'{noiseType}_{noiseAddType}_{noiseWhen}-downsample_{downsampleType}_{list_downsampleFactors[i]}')
                         for i in range(len(list_filterFactors)):
-                            ax.plot(list_noiseLevels, list_noise_filter_sc1_acrossFilterFactors[i], label=f'{noiseType}_{noiseAddType}_{noiseWhen}-filter_{list_filters[i]}_{list_filterFactors[i]}')
+                            ax.plot(list_noiseLevels, list_noise_filter_sc1_acrossFilterFactors[i], label=f'{noiseType}_{noiseAddType}_{noiseWhen}-filter_{filterType}_{list_filterFactors[i]}')
                         ax.set_title(f'{system}_(Cause-Effect Pair:{ce_pair})-sc1')
                         ax.set_xlabel('Noise Levels')
                         ax.set_ylabel('Converged Correlation Score')
@@ -164,7 +169,7 @@ for system in list_systems:
                         for i in range(len(list_downsampleFactors)):
                             ax.plot(list_noiseLevels, list_noise_D_sc2_acrossDownFactors[i], label=f'{noiseType}_{noiseAddType}_{noiseWhen}-{downsampleType}_{list_downsampleFactors[i]}')
                         for i in range(len(list_filterFactors)):
-                            ax.plot(list_noiseLevels, list_noise_filter_sc2_acrossFilterFactors[i], label=f'{noiseType}_{noiseAddType}_{noiseWhen}-filter_{list_filters[i]}_{list_filterFactors[i]}')
+                            ax.plot(list_noiseLevels, list_noise_filter_sc2_acrossFilterFactors[i], label=f'{noiseType}_{noiseAddType}_{noiseWhen}-filter_{filterType}_{list_filterFactors[i]}')
                         ax.set_title(f'{system}_(Cause-Effect Pair:{ce_pair})-sc2')
                         ax.set_xlabel('Noise Levels')
                         ax.set_ylabel('Converged Correlation Score')

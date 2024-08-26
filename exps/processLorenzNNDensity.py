@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import argparse
 
 # Function to load and process the density output files
-def load_and_process_density_files(output_dir, noiseType, noiseWhen, noiseAddType, delay, n_neighbors, noiseLevels, downsampleType, downsampleFactor):
+def load_and_process_density_files(output_dir, noiseType, noiseWhen, noiseAddType, delay, n_neighbors, noiseLevels, downsampleType, downsampleFactor, filterType=None, filterFactor=None):
     results = []
         
     # Iterate over each subdirectory in the output directory
@@ -22,12 +22,22 @@ def load_and_process_density_files(output_dir, noiseType, noiseWhen, noiseAddTyp
                         'noise_level': noise_level
                     }
                     
-                    # if no downsample -in folder noDownsample
-                    if downsampleType==None or downsampleType=="None" or downsampleType=='none':
-                        subdir_path = os.path.join(subdir_path, 'noDownsample')
-                    else: # if downsample
-                        subdir_path = os.path.join(subdir_path, downsampleType, str(downsampleFactor))    
+                    # # if no downsample -in folder noDownsample
+                    # if downsampleType==None or downsampleType=="None" or downsampleType=='none':
+                    #     subdir_path = os.path.join(subdir_path, 'noDownsample')
+                    # else: # if downsample
+                    #     subdir_path = os.path.join(subdir_path, downsampleType, str(downsampleFactor))    
                     
+                    # if only downsample
+                    if (filterType==None or filterType=="None" or filterType=='none') and (downsampleType!=None and downsampleType!="None" and downsampleType!='none'):
+                        subdir_path = os.path.join(subdir_path, 'onlyDownsample', downsampleType+str(downsampleFactor))
+                    # if only filter
+                    elif (downsampleType==None or downsampleType=="None" or downsampleType=='none') and (filterType!=None and filterType!="None" and filterType!='none'):
+                        subdir_path = os.path.join(subdir_path, 'onlyFilter', filterType+str(filterFactor))
+                    # if both downsample and filter
+                    elif (downsampleType!=None and downsampleType!="None" and downsampleType!='none') and (filterType!=None and filterType!="None" and filterType!='none'):
+                        subdir_path = os.path.join(subdir_path, 'both', 'down_'+downsampleType+str(downsampleFactor)+'-filter_'+filterType+str(filterFactor))
+
                     for file in os.listdir(subdir_path):
                         if file.endswith('.csv'):
                             file_path = os.path.join(subdir_path, file)
@@ -144,20 +154,39 @@ def main():
     parser.add_argument('--downsampleType', type=str, default=None, help='downsample type, options: None, "a/av/average" (average), "d/de/decimation" (remove/discard the rest), "s/sub/subsample" (randomly sample a subset of half the interval size from each interval, then average)')
     parser.add_argument('--downsampleFactor', type=int, default=10, help='downsample interval')
 
+    parser.add_argument('--filterType', type=str, default='average', help='Options: (plain) average, median, gaussian, butterworth')
+    parser.add_argument('--filterFactor', type=int, default=10, help='1D filter size, or cutoff frequency for butterworth filter')
+
+
     args = parser.parse_args()
 
     # noiseLevels = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75]
-    # noiseLevels = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15, 1.2, 1.25]
-    noiseLevels = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9]
+    noiseLevels = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.45, 1.5]
+    # noiseLevels = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9]
 
     save_dir=args.save_dir+'/'+f'_{args.noiseType}_{args.noiseWhen}_{args.noiseAddType}_delay{args.delay}_nn{args.n_neighbors}'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-    # if no downsample
-    if args.downsampleType==None or args.downsampleType=="None" or args.downsampleType=='none':
-        save_dir = os.path.join(save_dir, 'noDownsample')
-    else: # if downsample
-        save_dir = os.path.join(save_dir, args.downsampleType, str(args.downsampleFactor))
+    # # if no downsample
+    # if args.downsampleType==None or args.downsampleType=="None" or args.downsampleType=='none':
+    #     save_dir = os.path.join(save_dir, 'noDownsample')
+    # else: # if downsample
+    #     save_dir = os.path.join(save_dir, args.downsampleType, str(args.downsampleFactor))
+
+    # if only downsample
+    if (args.filterType==None or args.filterType=="None" or args.filterType=='none') and (args.downsampleType!=None and args.downsampleType!="None" and args.downsampleType!='none'):
+        output_subdir = os.path.join(output_subdir, 'onlyDownsample', args.downsampleType+str(args.downsampleFactor))
+    # if only filter
+    elif (args.downsampleType==None or args.downsampleType=="None" or args.downsampleType=='none') and (args.filterType!=None and args.filterType!="None" and args.filterType!='none'):
+        output_subdir = os.path.join(output_subdir, 'onlyFilter', args.filterType+str(args.filterFactor))
+    # if both downsample and filter
+    elif (args.downsampleType!=None and args.downsampleType!="None" and args.downsampleType!='none') and (args.filterType!=None and args.filterType!="None" and args.filterType!='none'):
+        output_subdir = os.path.join(output_subdir, 'both', 'down_'+args.downsampleType+str(args.downsampleFactor)+'-filter_'+args.filterType+str(args.filterFactor))
+    # if no downsample and no filter
+    else:
+        output_subdir = os.path.join(output_subdir, 'none')
+    if not os.path.exists(output_subdir):
+        os.makedirs(output_subdir)
     
     results = load_and_process_density_files(
         args.output_dir, 
@@ -168,7 +197,9 @@ def main():
         args.n_neighbors,
         noiseLevels,
         args.downsampleType,
-        args.downsampleFactor
+        args.downsampleFactor,
+        args.filterType,
+        args.filterFactor
     )
     # generate_plots(results, save_dir, noiseLevels)
     generate_plots_xmap(results, save_dir, noiseLevels)
