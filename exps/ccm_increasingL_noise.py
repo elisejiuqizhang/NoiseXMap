@@ -130,16 +130,16 @@ if args.downsampleType is None or args.downsampleType.lower() == 'none':
     stepL = int(maxL/numL)
     range_L = np.arange(stepL, maxL+1, stepL)
 else:
-    # maxL = args.maxL//args.downsampleFactor
-    # numL = args.numL
-    # stepL = int(maxL/numL)
-    # range_L = np.arange(stepL, maxL+1, stepL)
-
-    # Aug. 12 temporary update: keep the maxL and numL the same as the original, but the range_L will be different
-    maxL = args.maxL
+    maxL = args.maxL//args.downsampleFactor
     numL = args.numL
     stepL = int(maxL/numL)
     range_L = np.arange(stepL, maxL+1, stepL)
+
+    # # Aug. 12 temporary update: keep the maxL and numL the same as the original, but the range_L will be different
+    # maxL = args.maxL
+    # numL = args.numL
+    # stepL = int(maxL/numL)
+    # range_L = np.arange(stepL, maxL+1, stepL)
 
 arr_sc1=np.zeros((args.numSeeds, numL))
 arr_sc2=np.zeros((args.numSeeds, numL))

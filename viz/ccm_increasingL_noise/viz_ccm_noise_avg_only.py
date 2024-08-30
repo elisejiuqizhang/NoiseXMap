@@ -18,7 +18,8 @@ viz_save_dir=os.path.join(root, 'outputs','viz', 'ccm_increasingL_noise_avg_only
 
 # list_noiseLevels=[0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15]
 # list_noiseLevels=[ 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15]
-list_noiseLevels=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+# list_noiseLevels=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+list_noiseLevels=[0.35, 0.55, 0.7, 0.9, 1.05, 1.15]
 
 
 list_systems=['Lorenz']
@@ -28,18 +29,19 @@ list_noiseTypes=['gNoise']
 # list_noiseTypes=['lpNoise']
 
 
-list_noiseAddTypes=['add', 'mult', 'both']
-# list_noiseAddTypes=['add']
+# list_noiseAddTypes=['add', 'mult', 'both']
+list_noiseAddTypes=['add']
 # list_noiseAddTypes=['mult']
 # list_noiseAddTypes=['both']
 
-list_noiseWhen=['in', 'post']
-# list_noiseWhen=['in']
+# list_noiseWhen=['in', 'post']
+list_noiseWhen=['in']
 # list_noiseWhen=['post']
 
 list_filters=["average"]
 
-list_filterFactors=[5,8,10]
+# list_filterFactors=[5,8,10]
+list_filterFactors=[3,5,7,9,11,13]
 
 
 tau=1
@@ -80,8 +82,8 @@ for system in list_systems:
                         noise_noD_arr_sc2=np.load(os.path.join(noise_noD_dir+str(noiseLevel), 'arr_sc2.npy'))
                         # noise_noD_avg_sc1.append(np.mean(noise_noD_arr_sc1[:,-1]))
                         # noise_noD_avg_sc2.append(np.mean(noise_noD_arr_sc2[:,-1]))
-                        noise_noD_avg_sc1.append(np.mean(noise_noD_arr_sc1[:,-2:]))
-                        noise_noD_avg_sc2.append(np.mean(noise_noD_arr_sc2[:,-2:]))
+                        noise_noD_avg_sc1.append(np.mean(noise_noD_arr_sc1[:,-3:]))
+                        noise_noD_avg_sc2.append(np.mean(noise_noD_arr_sc2[:,-3:]))
 
                     # noise_data - only filters, no downsampling
                     for filterType in list_filters:
@@ -94,8 +96,8 @@ for system in list_systems:
                             for noiseLevel in list_noiseLevels:
                                 noise_filter_arr_sc1=np.load(os.path.join(noise_filter_dir+str(noiseLevel), 'arr_sc1.npy'))
                                 noise_filter_arr_sc2=np.load(os.path.join(noise_filter_dir+str(noiseLevel), 'arr_sc2.npy'))
-                                noise_filter_avg_sc1.append(np.mean(noise_filter_arr_sc1[:,-2:]))
-                                noise_filter_avg_sc2.append(np.mean(noise_filter_arr_sc2[:,-2:]))
+                                noise_filter_avg_sc1.append(np.mean(noise_filter_arr_sc1[:,-3:]))
+                                noise_filter_avg_sc2.append(np.mean(noise_filter_arr_sc2[:,-3:]))
                             list_noise_filter_sc1_acrossFilterFactors.append(noise_filter_avg_sc1)
                             list_noise_filter_sc2_acrossFilterFactors.append(noise_filter_avg_sc2)
 
@@ -104,7 +106,7 @@ for system in list_systems:
                             os.makedirs(os.path.join(viz_save_dir,system))
 
                         # score 1 plot
-                        fig=plt.figure(figsize=(13,8))
+                        fig=plt.figure(figsize=(14,7))
                         ax=fig.add_subplot(111)
                         ax.plot(list_noiseLevels, [noNoise_avg_sc1]*len(list_noiseLevels), 'k--', label='No noise')
                         ax.plot(list_noiseLevels, noise_noD_avg_sc1, color='c', label=f'{noiseType}_{noiseAddType}_{noiseWhen}-no Filtering')
@@ -118,7 +120,7 @@ for system in list_systems:
                         plt.close()
 
                         # score 2 plot
-                        fig=plt.figure(figsize=(13,8))
+                        fig=plt.figure(figsize=(14,7))
                         ax=fig.add_subplot(111)
                         ax.plot(list_noiseLevels, [noNoise_avg_sc2]*len(list_noiseLevels), 'k--', label='No noise')
                         ax.plot(list_noiseLevels, noise_noD_avg_sc2, color='c', label=f'{noiseType}_{noiseAddType}_{noiseWhen}-no Filtering')

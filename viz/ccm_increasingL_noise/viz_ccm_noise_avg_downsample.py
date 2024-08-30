@@ -27,7 +27,8 @@ viz_save_dir=os.path.join(root, 'outputs','viz', 'ccm_increasingL_noise_avg_down
 # list_noiseLevels=[0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5]
 # list_noiseLevels=[0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15]
 # list_noiseLevels=[ 0.8, 0.85, 0.9, 0.95, 1.0, 1.05, 1.1, 1.15]
-list_noiseLevels=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+# list_noiseLevels=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+list_noiseLevels=[0.35, 0.55, 0.7, 0.9, 1.05, 1.15]
 
 list_systems=['Lorenz']
 # list_systems=['RosslerLorenz']
@@ -36,13 +37,13 @@ list_systems=['Lorenz']
 # list_noiseTypes=['lpNoise']
 list_noiseTypes=['gNoise']
 
-list_noiseAddTypes=['add', 'mult', 'both']
-# list_noiseAddTypes=['add']
+# list_noiseAddTypes=['add', 'mult', 'both']
+list_noiseAddTypes=['add']
 # list_noiseAddTypes=['mult']
 # list_noiseAddTypes=['both']
 
-list_noiseWhen=['in', 'post']
-# list_noiseWhen=['in']
+# list_noiseWhen=['in', 'post']
+list_noiseWhen=['in']
 # list_noiseWhen=['post']
 
 # list_downsampleTypes=['average', 'decimation', 'subsample']
@@ -52,14 +53,16 @@ list_downsampleTypes=['average']
 
 # list_downsampleFactors=[3,5,8,10]
 # list_downsampleFactors=[3,5]
-list_downsampleFactors=[5,8,10]
+# list_downsampleFactors=[5,8,10]
+list_downsampleFactors=[3,5,7,9,11,13]
 
 
 # list_filters=["average", "median", "gaussian", "butterworth"]
 list_filters=["average"]
 
 # list_filterFactors=[5,8,10]
-list_filterFactors=[5,8,10]
+# list_filterFactors=[5,8,10]
+list_filterFactors=[3,5,7,9,11,13]
 
 tau=1
 emd=3
@@ -104,7 +107,8 @@ for system in list_systems:
                         noise_noD_avg_sc2.append(np.mean(noise_noD_arr_sc2[:,-3:-1]))
 
                     # noise data - downsampled direction
-                    noise_D_dir=os.path.join(data_source_dir, system+'('+ce_pair+')240819', 'Downsampled')
+                    # noise_D_dir=os.path.join(data_source_dir, system+'('+ce_pair+')240819', 'Downsampled')
+                    noise_D_dir=os.path.join(data_source_dir, system+'('+ce_pair+')', 'Downsampled')
                     for downsampleType in list_downsampleTypes: # average, decimation, subsample - each type is having its own plot along with the reference and the noise-noDownsample curves
                         noise_DType_dir=os.path.join(noise_D_dir, downsampleType+'_')
                         # each DType and DFactor gets their own curve plotted
